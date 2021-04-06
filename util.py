@@ -11,11 +11,13 @@ class Sudoku_square_v2:
 # Parsing puzzle and creating square objects containing the following: value in square,
 # row square is in, col square is in,same sqr indices, index for square
 def parse_text_v2(name):
-    puzzle_array = []
-    row_count = 1
-    col_count = 1
-    index = 1
-    sqr_indices = []
+    row_count, col_count, index = (1 for j in range(3))
+    rone, rtwo, rthree, rfour, rfive, rsix, rseven, reight, rnine, cone, ctwo, cthree, cfour, cfive, csix, cseven, ceight, cnine, sqr_indices, puzzle_array = (
+    [] for i in range(20))
+    # NOT DONE
+    # Use these to maintain row/col information rather than repeated searches of entire puzzle.
+    row_lists = [rone, rtwo, rthree, rfour, rfive, rsix, rseven, reight, rnine]
+    col_lists = [cone, ctwo, cthree, cfour, cfive, csix, cseven, ceight, cnine]
     with open(name, encoding='utf8') as f:
         for line in f:
             for char in line:

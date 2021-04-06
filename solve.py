@@ -80,10 +80,10 @@ def solve_puzzle_v2(puzzle_array):
                 if sqr.col != puzzle_array[i].col and sqr.square == puzzle_array[i].square and cols_to_check.count(
                         sqr.col) == 0:
                     cols_to_check.append(sqr.col)
-            for k in possible:
-                b = is_change_okay_v2(cols_to_check, rows_to_check, k, puzzle_array, i)
-                if b:
-                    puzzle_array[i].value = k
+            for pos_nums in possible:
+                can_change = is_change_okay_v2(cols_to_check, rows_to_check, pos_nums, puzzle_array, i)
+                if can_change:
+                    puzzle_array[i].value = pos_nums
                     return solve_puzzle_v2(puzzle_array)
             if only_remaining:
                 return solve_puzzle_v2(puzzle_array)
@@ -91,12 +91,12 @@ def solve_puzzle_v2(puzzle_array):
 
 
 # Method for verifying if change should be made based on rules of Sudoku
-# cols : The columns within the square that need to be checked for presence of num
-# rows : The rows within the square that need to be checked for presence of num
+# cols_to_check : The columns within the square that need to be checked for presence of num
+# rows_to_check : The rows within the square that need to be checked for presence of num
 # num : The number that we are verifying if it can be placed in the puzzle at index
 # puzzle : The list of Sudoku_Square_v2 objects
 # index : The index of the space in puzzle in question
-def is_change_okay_v2(cols, rows, num, puzzle, index):
+def is_change_okay_v2(cols_to_check, rows_to_check, num, puzzle, index):
     # square_indices : List used to store all the index locations for particular Sudoku square
     square_indices = []
     for sqr in puzzle[index].square:
@@ -109,9 +109,9 @@ def is_change_okay_v2(cols, rows, num, puzzle, index):
     # input list cols.
     cols_cleared = []
     for sqr in puzzle:
-        if rows.count(sqr.row) == 1 and sqr.value == num:
+        if rows_to_check.count(sqr.row) == 1 and sqr.value == num:
             rows_cleared.append(sqr.row)
-        if cols.count(sqr.col) == 1 and sqr.value == num:
+        if cols_to_check.count(sqr.col) == 1 and sqr.value == num:
             cols_cleared.append(sqr.col)
 
     # square_indices_to_remove : This is the list of index locations that have been cleared either by being in a row
