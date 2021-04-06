@@ -1,3 +1,54 @@
+# This will check for cols or rows close to full and fill them if possible after recursively calling other method.
+def solve_puzzle_check_row_col(puzzle_array):
+    # Calling recursive solver which will attempt to replace as many number as possible with standard method
+    solve_puzzle_v2(puzzle_array)
+    filled_rows = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    filled_cols = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+    for i in range(len(puzzle_array)):
+        if puzzle_array[i].value != 0:
+            filled_cols[puzzle_array[i].col - 1] = filled_cols[puzzle_array[i].col - 1] + 1
+            filled_rows[puzzle_array[i].row - 1] = filled_rows[puzzle_array[i].row - 1] + 1
+    current_row = 1
+    current_col = 1
+    possible_indices = []
+    for pos_row in filled_rows:
+        if pos_row != 9:
+            for j in range(len(puzzle_array)):
+                if puzzle_array[j].row == current_row and puzzle_array[j].value == 0:
+                    possible_indices.append(j + 1)
+
+            for pos_ind_select in possible_indices:
+                for pos_values in puzzle_array[pos_ind_select - 1].possible:
+                    count_of_value = 0
+                    for pos_ind_full in possible_indices:
+                        if puzzle_array[pos_ind_full - 1].possible.count(pos_values) == 1:
+                            count_of_value = count_of_value + 1
+                    if count_of_value == 1:
+                        puzzle_array[pos_ind_select - 1].value = pos_values
+                        return solve_puzzle_check_row_col(puzzle_array)
+        current_row = current_row + 1
+        possible_indices.clear()
+
+    for pos_col in filled_cols:
+        if pos_col != 9:
+            for j in range(len(puzzle_array)):
+                if puzzle_array[j].col == current_col and puzzle_array[j].value == 0:
+                    possible_indices.append(j + 1)
+            for pos_ind_select in possible_indices:
+                for pos_values in puzzle_array[pos_ind_select - 1].possible:
+                    count_of_value = 0
+                    for pos_ind_full in possible_indices:
+                        if puzzle_array[pos_ind_full - 1].possible.count(pos_values) == 1:
+                            count_of_value = count_of_value + 1
+                    if count_of_value == 1:
+                        puzzle_array[pos_ind_select - 1].value = pos_values
+                        return solve_puzzle_check_row_col(puzzle_array)
+        current_col = current_col + 1
+        possible_indices.clear()
+    return
+
+
 # Method for making steps towards solving puzzle each run attempts to change one value in puzzle.
 def solve_puzzle_v2(puzzle_array):
     for i in range(len(puzzle_array)):
@@ -33,25 +84,41 @@ def solve_puzzle_v2(puzzle_array):
                 b = is_change_okay_v2(cols_to_check, rows_to_check, k, puzzle_array, i)
                 if b:
                     puzzle_array[i].value = k
-                    return True
+                    return solve_puzzle_v2(puzzle_array)
             if only_remaining:
-                return True
-    return False
+                return solve_puzzle_v2(puzzle_array)
+    return
 
 
-# Method for verifying if change should be made
+# Method for verifying if change should be made based on rules of Sudoku
+# cols : The columns within the square that need to be checked for presence of num
+# rows : The rows within the square that need to be checked for presence of num
+# num : The number that we are verifying if it can be placed in the puzzle at index
+# puzzle : The list of Sudoku_Square_v2 objects
+# index : The index of the space in puzzle in question
 def is_change_okay_v2(cols, rows, num, puzzle, index):
-    rows_cleared = []
-    cols_cleared = []
+    # square_indices : List used to store all the index locations for particular Sudoku square
     square_indices = []
-    square_indices_to_remove = []
+    for sqr in puzzle[index].square:
+        square_indices.append(sqr)
+
+    # rows_cleared : List used to store rows in which do contain the desired number. We want to see this match with
+    # input list rows.
+    rows_cleared = []
+    # cols_cleared : List used to store cols in which do contain the desired number. We want to see this match with
+    # input list cols.
+    cols_cleared = []
     for sqr in puzzle:
         if rows.count(sqr.row) == 1 and sqr.value == num:
             rows_cleared.append(sqr.row)
         if cols.count(sqr.col) == 1 and sqr.value == num:
             cols_cleared.append(sqr.col)
-    for sqr in puzzle[index].square:
-        square_indices.append(sqr)
+
+    # square_indices_to_remove : This is the list of index locations that have been cleared either by being in a row
+    # which has been cleared, a column that has been cleared or by containing a none zero number. We want to see the
+    # intersection between this and available spaces in square to be all but one index. This would mean that the one
+    # remaining index is the only place in which the number in question can go.
+    square_indices_to_remove = []
     for same_sqr in square_indices:
         if rows_cleared.count(puzzle[same_sqr - 1].row) == 1 or cols_cleared.count(puzzle[same_sqr - 1].col) == 1 or \
                 puzzle[same_sqr - 1].value != 0:
@@ -60,53 +127,4 @@ def is_change_okay_v2(cols, rows, num, puzzle, index):
         square_indices.remove(sqr_remove)
     if len(square_indices) == 1:
         return True
-    return False
-
-
-# This will check for cols or rows close to full and fill them if possible
-def solve_puzzle_check_row_col(puzzle_array):
-    filled_rows = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-    filled_cols = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-    for i in range(len(puzzle_array)):
-        if puzzle_array[i].value != 0:
-            filled_cols[puzzle_array[i].col - 1] = filled_cols[puzzle_array[i].col - 1] + 1
-            filled_rows[puzzle_array[i].row - 1] = filled_rows[puzzle_array[i].row - 1] + 1
-    current_row = 1
-    current_col = 1
-    possible_indicies = []
-    for pos_row in filled_rows:
-        if pos_row != 9:
-            for j in range(len(puzzle_array)):
-                if puzzle_array[j].row == current_row and puzzle_array[j].value == 0:
-                    possible_indicies.append(j + 1)
-
-            for pos_ind_select in possible_indicies:
-                for pos_values in puzzle_array[pos_ind_select - 1].possible:
-                    count_of_value = 0
-                    for pos_ind_full in possible_indicies:
-                        if puzzle_array[pos_ind_full - 1].possible.count(pos_values) == 1:
-                            count_of_value = count_of_value + 1
-                    if count_of_value == 1:
-                        puzzle_array[pos_ind_select - 1].value = pos_values
-                        return True
-        current_row = current_row + 1
-        possible_indicies.clear()
-
-    for pos_col in filled_cols:
-        if pos_col != 9:
-            for j in range(len(puzzle_array)):
-                if puzzle_array[j].col == current_col and puzzle_array[j].value == 0:
-                    possible_indicies.append(j + 1)
-            for pos_ind_select in possible_indicies:
-                for pos_values in puzzle_array[pos_ind_select - 1].possible:
-                    count_of_value = 0
-                    for pos_ind_full in possible_indicies:
-                        if puzzle_array[pos_ind_full - 1].possible.count(pos_values) == 1:
-                            count_of_value = count_of_value + 1
-                    if count_of_value == 1:
-                        puzzle_array[pos_ind_select - 1].value = pos_values
-                        return True
-        current_col = current_col + 1
-        possible_indicies.clear()
     return False
