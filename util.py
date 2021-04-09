@@ -51,6 +51,9 @@ def parse_text_v2(name):
                             print('Square check failed')
                     else:
                         print('Square check failed')
+                    if int(char) != 0:
+                        row_lists[row_count - 1].append(int(char))
+                        col_lists[col_count - 1].append(int(char))
                     s_name = Sudoku_square_v2(int(char), row_count, col_count, sqr_indices, index)
                     puzzle_array.append(s_name)
                     index = index + 1
@@ -58,7 +61,7 @@ def parse_text_v2(name):
                     if col_count == 10:
                         col_count = col_count - 9
             row_count = row_count + 1
-    return puzzle_array
+    return puzzle_array, row_lists, col_lists
 
 
 # Method for printing out puzzle to terminal

@@ -1,7 +1,7 @@
 # This will check for cols or rows close to full and fill them if possible after recursively calling other method.
-def solve_puzzle_check_row_col(puzzle_array):
+def solve_puzzle_check_row_col(puzzle_array, row_lists, col_lists):
     # Calling recursive solver which will attempt to replace as many number as possible with standard method
-    solve_puzzle_v2(puzzle_array)
+    solve_puzzle_v2(puzzle_array, row_lists, col_lists)
     filled_rows = [0, 0, 0, 0, 0, 0, 0, 0, 0]
     filled_cols = [0, 0, 0, 0, 0, 0, 0, 0, 0]
 
@@ -17,7 +17,6 @@ def solve_puzzle_check_row_col(puzzle_array):
             for j in range(len(puzzle_array)):
                 if puzzle_array[j].row == current_row and puzzle_array[j].value == 0:
                     possible_indices.append(j + 1)
-
             for pos_ind_select in possible_indices:
                 for pos_values in puzzle_array[pos_ind_select - 1].possible:
                     count_of_value = 0
@@ -26,7 +25,7 @@ def solve_puzzle_check_row_col(puzzle_array):
                             count_of_value = count_of_value + 1
                     if count_of_value == 1:
                         puzzle_array[pos_ind_select - 1].value = pos_values
-                        return solve_puzzle_check_row_col(puzzle_array)
+                        return solve_puzzle_check_row_col(puzzle_array, row_lists, col_lists)
         current_row = current_row + 1
         possible_indices.clear()
 
@@ -43,14 +42,14 @@ def solve_puzzle_check_row_col(puzzle_array):
                             count_of_value = count_of_value + 1
                     if count_of_value == 1:
                         puzzle_array[pos_ind_select - 1].value = pos_values
-                        return solve_puzzle_check_row_col(puzzle_array)
+                        return solve_puzzle_check_row_col(puzzle_array, row_lists, col_lists)
         current_col = current_col + 1
         possible_indices.clear()
     return
 
 
 # Method for making steps towards solving puzzle each run attempts to change one value in puzzle.
-def solve_puzzle_v2(puzzle_array):
+def solve_puzzle_v2(puzzle_array, row_lists, col_lists):
     for i in range(len(puzzle_array)):
         # This list of possibilities are the numbers that could possibly be
         # placed in square
@@ -66,6 +65,8 @@ def solve_puzzle_v2(puzzle_array):
                     possible.remove(puzzle_array[index - 1].value)
                     if len(possible) == 1:
                         puzzle_array[i].value = possible[0]
+                        row_lists[puzzle_array[i].row - 1].append(possible[0])
+                        col_lists[puzzle_array[i].col - 1].append(possible[0])
                         only_remaining = True
             for sqr in puzzle_array:
                 if possible.count(sqr.value) == 1 and (
@@ -73,6 +74,8 @@ def solve_puzzle_v2(puzzle_array):
                     possible.remove(sqr.value)
                     if len(possible) == 1:
                         puzzle_array[i].value = possible[0]
+                        row_lists[puzzle_array[i].row - 1].append(possible[0])
+                        col_lists[puzzle_array[i].col - 1].append(possible[0])
                         only_remaining = True
                 if sqr.row != puzzle_array[i].row and sqr.square == puzzle_array[i].square and rows_to_check.count(
                         sqr.row) == 0:
@@ -80,13 +83,17 @@ def solve_puzzle_v2(puzzle_array):
                 if sqr.col != puzzle_array[i].col and sqr.square == puzzle_array[i].square and cols_to_check.count(
                         sqr.col) == 0:
                     cols_to_check.append(sqr.col)
+
             for pos_nums in possible:
-                can_change = is_change_okay_v2(cols_to_check, rows_to_check, pos_nums, puzzle_array, i)
+                can_change = is_change_okay_v2(cols_to_check, rows_to_check, pos_nums, puzzle_array, i, row_lists,
+                                               col_lists)
                 if can_change:
                     puzzle_array[i].value = pos_nums
-                    return solve_puzzle_v2(puzzle_array)
+                    row_lists[puzzle_array[i].row - 1].append(pos_nums)
+                    col_lists[puzzle_array[i].col - 1].append(pos_nums)
+                    return solve_puzzle_v2(puzzle_array, row_lists, col_lists)
             if only_remaining:
-                return solve_puzzle_v2(puzzle_array)
+                return solve_puzzle_v2(puzzle_array, row_lists, col_lists)
     return
 
 
@@ -96,7 +103,7 @@ def solve_puzzle_v2(puzzle_array):
 # num : The number that we are verifying if it can be placed in the puzzle at index
 # puzzle : The list of Sudoku_Square_v2 objects
 # index : The index of the space in puzzle in question
-def is_change_okay_v2(cols_to_check, rows_to_check, num, puzzle, index):
+def is_change_okay_v2(cols_to_check, rows_to_check, num, puzzle, index, row_lists, col_lists):
     # square_indices : List used to store all the index locations for particular Sudoku square
     square_indices = []
     for sqr in puzzle[index].square:
@@ -108,12 +115,12 @@ def is_change_okay_v2(cols_to_check, rows_to_check, num, puzzle, index):
     # cols_cleared : List used to store cols in which do contain the desired number. We want to see this match with
     # input list cols.
     cols_cleared = []
-    for sqr in puzzle:
-        if rows_to_check.count(sqr.row) == 1 and sqr.value == num:
-            rows_cleared.append(sqr.row)
-        if cols_to_check.count(sqr.col) == 1 and sqr.value == num:
-            cols_cleared.append(sqr.col)
 
+    for nums in range(len(row_lists)):
+        if rows_to_check.count(nums) == 1 and row_lists[nums - 1].count(num) == 1:
+            rows_cleared.append(nums)
+        if cols_to_check.count(nums) == 1 and col_lists[nums - 1].count(num) == 1:
+            cols_cleared.append(nums)
     # square_indices_to_remove : This is the list of index locations that have been cleared either by being in a row
     # which has been cleared, a column that has been cleared or by containing a none zero number. We want to see the
     # intersection between this and available spaces in square to be all but one index. This would mean that the one
