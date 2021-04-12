@@ -1,3 +1,30 @@
+import random
+
+import util
+
+
+# Current method for guessing. This does not give preference to indices that have a lower chance of failure or
+# provides most information when correct. This is currently totally random and should be improved in the future.
+def time_to_guess(puzzle_array, save_state, row_lists, row_list_save, col_lists, col_list_save):
+    if util.puzzle_check_v2(puzzle_array):
+        return
+    solve_puzzle_check_row_col(puzzle_array, row_lists, col_lists)
+    # Finding where to guess. Choosing place with least chance of being wrong
+    possible_ind = []
+    for sqr in puzzle_array:
+        if sqr.value == 0 and len(sqr.possible) > 0:
+            possible_ind.append(sqr.index)
+
+    if len(possible_ind) > 0:
+        ran_ind = random.choice(possible_ind)
+        ran_pos = random.choice(puzzle_array[ran_ind - 1].possible)
+        puzzle_array[ran_ind - 1].value = ran_pos
+        row_lists[puzzle_array[ran_ind - 1].row - 1].append(ran_pos)
+        col_lists[puzzle_array[ran_ind - 1].col - 1].append(ran_pos)
+        time_to_guess(puzzle_array, save_state, row_lists, row_list_save, col_lists, col_list_save)
+    return puzzle_array, row_lists, col_lists
+
+
 # This will check for cols or rows close to full and fill them if possible after recursively calling other method.
 def solve_puzzle_check_row_col(puzzle_array, row_lists, col_lists):
     # Calling recursive solver which will attempt to replace as many number as possible with standard method

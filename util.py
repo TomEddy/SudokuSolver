@@ -8,16 +8,34 @@ class Sudoku_square_v2:
         self.possible = list([1, 2, 3, 4, 5, 6, 7, 8, 9])
 
 
+# Method used for cloning lists. Specifically for save states
+def clone(my_list):
+    my_list_clone = list()
+    for item in my_list:
+        my_list_clone.append(item)
+    return my_list_clone
+
+
+# Method used for cloning puzzle. This is needed for save state during guessing.
+def clone_puzzle(my_puzzle):
+    my_list_clone = list()
+    for item in my_puzzle:
+        sqr = Sudoku_square_v2(item.value, item.row, item.col, item.square, item.index)
+        sqr.possible = clone(item.possible)
+        my_list_clone.append(sqr)
+    return my_list_clone
+
+
 # Parsing puzzle and creating square objects containing the following: value in square,
 # row square is in, col square is in,same sqr indices, index for square
 def parse_text_v2(name):
-    row_count, col_count, index = (1 for j in range(3))
-    rone, rtwo, rthree, rfour, rfive, rsix, rseven, reight, rnine, cone, ctwo, cthree, cfour, cfive, csix, cseven, ceight, cnine, sqr_indices, puzzle_array = (
-    [] for i in range(20))
-    # NOT DONE
+    row_count, col_count, index = (1 for _ in range(3))
+    r_one, r_two, r_three, r_four, r_five, r_six, r_seven, r_eight, r_nine, c_one, c_two, c_three, c_four, c_five, \
+    c_six, c_seven, c_eight, c_nine, sqr_indices, puzzle_array = ([] for _ in range(20))
+
     # Use these to maintain row/col information rather than repeated searches of entire puzzle.
-    row_lists = [rone, rtwo, rthree, rfour, rfive, rsix, rseven, reight, rnine]
-    col_lists = [cone, ctwo, cthree, cfour, cfive, csix, cseven, ceight, cnine]
+    row_lists = [r_one, r_two, r_three, r_four, r_five, r_six, r_seven, r_eight, r_nine]
+    col_lists = [c_one, c_two, c_three, c_four, c_five, c_six, c_seven, c_eight, c_nine]
     with open(name, encoding='utf8') as f:
         for line in f:
             for char in line:
