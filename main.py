@@ -1,4 +1,6 @@
+import math
 import random
+import time
 
 import pytesseract
 from PIL import Image
@@ -14,13 +16,23 @@ if __name__ == '__main__':
 
     # !Testing for image recognition!
     Img = Image.open("SudokuPicture2.jpg")
-    size = Img.size
+    Img.save("testing.png", format='PNG', dpi=(200, 200))
+
+    time.sleep(2)
+
+    Img = Image.open("testing.png")
+
     sharp = ImageEnhance.Sharpness(Img)
     Img = sharp.enhance(2.0)
-
-    # ImgResized = Img.resize((round(size[0]*5),round(size[1]*5)))
+    size = Img.size
+    # Img = Img.resize((round(size[0]*.25),round(size[1]*.25)))
     # size = ImgResized.size
-    Img = Img.crop((round(.01 * size[0]), round(.01 * size[1]), round(.99 * size[0]), round(.99 * size[1])))
+    Img = Img.crop((round(.015 * size[0]), round(.015 * size[1]), round(.985 * size[0]), round(.985 * size[1])))
+    size = Img.size
+
+    # Converts image to grayscale
+    Img = Img.convert('L')
+
     increments = round(size[0] / 9)
     midpoint = round((size[0] / 9) - (size[0] / 18))
 
@@ -30,36 +42,55 @@ if __name__ == '__main__':
     for k in range(9):
         # cropped = Img.crop((leftbound + (i * increments), leftbound + (k * increments), rightbound + (i * increments), rightbound+ (k * increments)))
         for i in range(9):
-            poss_list = []
-            for j in range(30):
-                if j == 0:
-                    difference = 0
-                else:
-                    difference = random.randrange(round(((1 / 8) * (size[0] / 9))), round(((1 / 4) * (size[0] / 9))))
-                leftbound = round(midpoint - ((3 / 4) * (size[0] / 9)) + difference)
-                rightbound = round(midpoint + ((3 / 4) * (size[0] / 9)) - difference)
-                cropped = Img.crop((leftbound + (i * increments), leftbound + (k * increments),
-                                    rightbound + (i * increments), rightbound + (k * increments)))
-                nobord_crop = ImageOps.expand(cropped, border=-(round(.005 * size[0])), fill='white')
-                output = pytesseract.image_to_string(nobord_crop, lang='eng', \
-                                                     config='--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789')
-                # nobord_crop.save('testing'+str(i)+str(j)+'.jpg')
-                if len(output) > 1:
-                    poss_list.append(int(output[0]))
-                elif alternate:
-                    alternate = False
-                elif alternate2:
-                    alternate2 = False
-                else:
-                    poss_list.append(0)
-                    alternate = True
-                    alternate2 = True
 
-            if len(poss_list) == 0:
+            leftbound = round(midpoint - ((21 / 32) * (size[0] / 9)) / 2)
+            rightbound = round(midpoint + ((21 / 32) * (size[0] / 9)) / 2)
+            cropped = Img.crop((leftbound + (i * increments), leftbound + (k * increments),
+                                rightbound + (i * increments), rightbound + (k * increments)))
+            extrema = cropped.getextrema()
+            if extrema == (255, 255):
+                # all white
                 puzzle_list.append(0)
+                print(puzzle_list)
             else:
-                puzzle_list.append(max(poss_list, key=poss_list.count))
-            print(puzzle_list)
+                poss_list = []
+                is_cont = True
+                count = 0
+                border_multiplier = 0
+                while is_cont:
+                    difference = random.randrange(round(((1 / 8) * (size[0] / 9))), round(((5 / 32) * (size[0] / 9))))
+                    leftbound = round(midpoint - ((21 / 32) * (size[0] / 9)) + difference)
+                    rightbound = round(midpoint + ((21 / 32) * (size[0] / 9)) - difference)
+                    cropped = Img.crop((leftbound + (i * increments), leftbound + (k * increments),
+                                        rightbound + (i * increments), rightbound + (k * increments)))
+                    nobord_crop = ImageOps.crop(cropped, border=border_multiplier)
+                    nobord_crop = ImageOps.expand(nobord_crop, border=2, fill='white')
+                    nobord_crop = ImageOps.posterize(nobord_crop, 1)
+                    output = pytesseract.image_to_string(nobord_crop, lang='eng',
+                                                         config='--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789')
+                    if len(output) > 1:
+                        poss_list.append(int(output[0]))
+                    if count > 50:
+                        border_multiplier = round(.1 * cropped.size[1])
+
+                    if count > 120:
+                        is_cont = False
+                        puzzle_list.append('*')
+                    elif count > 50 and len(poss_list) >= 5:
+                        # nobord_crop.save('testing' + str(count) + '.jpg')
+                        if poss_list.count(max(poss_list, key=poss_list.count)) >= math.floor(len(poss_list) * .7):
+                            is_cont = False
+                            puzzle_list.append(max(poss_list, key=poss_list.count))
+                    elif len(poss_list) > 20:
+                        if poss_list.count(max(poss_list, key=poss_list.count)) >= math.floor(len(poss_list) * .8):
+                            is_cont = False
+                            puzzle_list.append(max(poss_list, key=poss_list.count))
+                    elif len(poss_list) > 5:
+                        if poss_list.count(max(poss_list, key=poss_list.count)) >= math.floor(len(poss_list) * .9):
+                            is_cont = False
+                            puzzle_list.append(max(poss_list, key=poss_list.count))
+                    count = count + 1
+                print(puzzle_list)
         puzzle_list.append('newline')
     print(puzzle_list)
     # !Testing for image recognition!
